@@ -10,7 +10,7 @@ maintainer: leon@solatis.com
 homepage: http://github.com/solatis/haskell-network-attoparsec
 bug-reports: http://github.com/solatis/haskell-network-attoparsec/issues
 stability: experimental
-synopsis: Utility functions for running an attoparsec parser against a socket
+synopsis: Utility functions for running a parser against a socket, without the need of a bigger framework such as Pipes or Conduit.
 build-type: Simple
 data-files: LICENSE, README.md
 cabal-version: >= 1.10
