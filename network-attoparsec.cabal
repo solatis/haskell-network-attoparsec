@@ -14,7 +14,7 @@ synopsis: Utility functions for running a parser against a socket, without the n
 build-type: Simple
 data-files: LICENSE, README.md
 cabal-version: >= 1.10
-tested-with: GHC == 7.4, GHC == 7.6, GHC == 7.8
+tested-with: GHC == 7.6, GHC == 7.8
 
 library
   hs-source-dirs:      src
