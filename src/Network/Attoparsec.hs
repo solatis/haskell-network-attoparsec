@@ -38,8 +38,7 @@ data ParseMode = Single | Many
 --
 --   For more usage examples, see the test directory.
 parseMany :: ( MonadIO m
-             , MonadError String m
-             , Show a)
+             , MonadError String m)
           => NS.Socket         -- ^ Socket to read data from
           -> ParseC a          -- ^ Initial parser state
           -> ParseC a          -- ^ Continuation parser state
@@ -62,8 +61,7 @@ parseMany s p0 pCur = do
 --
 --  > doParse sock = parseOne sock (AttoParsec.parse myParser)
 parseOne :: ( MonadIO m
-            , MonadError String m
-            , Show a)
+            , MonadError String m)
          => NS.Socket -- ^ Socket to read data from
          -> ParseC a  -- ^ Initial parser state
          -> m a       -- ^ Parsed value
@@ -78,11 +76,10 @@ parseOne s p0 = do
 
    -- This is an internal error, since it means our single-object parser
    -- returned multiple objects.
-   _   -> error ("More than one element parsed: " ++ show value)
+   _   -> error "More than one element parsed"
 
 parseBuffer :: ( MonadIO m
-               , MonadError String m
-               , Show a)
+               , MonadError String m)
             => ParseC a          -- ^ Initial parser state
             -> ParseMode         -- ^ Whether to perform greedy or non-greedy parsing
             -> BS.ByteString     -- ^ Unconsumed buffer from previous run
