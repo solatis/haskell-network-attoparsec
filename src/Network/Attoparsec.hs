@@ -40,9 +40,8 @@ parseBuffer p0 mode =
         case pCur bCur of
          -- On error, throw error through MonadError
          Atto.Fail    err _ _  -> throwError ("An error occured while parsing input: " ++ show err)
-         Atto.Partial p1       -> do
-           return (p1, [])
-         Atto.Done    b1 v -> do
+         Atto.Partial p1       -> return (p1, [])
+         Atto.Done    b1 v     ->
            if BS.null b1
              -- This means a "perfect parse" occured: exactly enough data was on
              -- the socket to complete one parse round.
