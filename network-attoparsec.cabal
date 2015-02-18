@@ -1,10 +1,9 @@
 name: network-attoparsec
 category: Network, Parsing
 version: 0.9.1
-description: Run an attoparsec parser against a TCP socket
 license: MIT
 license-file: LICENSE
-copyright: (c) 2014 Leon Mergen
+copyright: (c) 2015 Leon Mergen
 author: Leon Mergen
 maintainer: leon@solatis.com
 homepage: http://github.com/solatis/haskell-network-attoparsec

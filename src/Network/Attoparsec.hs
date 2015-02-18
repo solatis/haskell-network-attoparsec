@@ -1,8 +1,17 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
 
--- | Utility functions for running a parser against a socket, without the need
---   of a bigger framework such as Pipes or Conduit.
+{-|
+Module      : network-attoparsec
+Description : Utility functions for running a parser against a socket
+Copyright   : (c) Leon Mergen, 2015
+License     : MIT
+Maintainer  : leon@solatis.com
+Stability   : experimental
+
+Utility functions for running a parser against a socket, without the need of a
+bigger framework such as Pipes or Conduit.
+-}
 
 module Network.Attoparsec (ParseC, parseMany, parseOne) where
 
