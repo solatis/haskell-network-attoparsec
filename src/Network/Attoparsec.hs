@@ -4,7 +4,7 @@
 -- | Utility functions for running a parser against a socket, without the need
 --   of a bigger framework such as Pipes or Conduit.
 
-module Network.Attoparsec (parseMany, parseOne) where
+module Network.Attoparsec (ParseC, parseMany, parseOne) where
 
 import           Control.Monad.Error
 
@@ -16,9 +16,7 @@ import qualified Data.Attoparsec.ByteString as Atto
 -- | The parsing continuation form of a "Data.Attoparsec" parser. This is
 --   typically created by running the attoparsec "parse" function:
 --
---   @
---     createParser = AttoParsec.parse myParser
---   @
+--   > createParser = AttoParsec.parse myParser
 type ParseC a = BS.ByteString -> Atto.Result a
 
 -- | The type of parsing to perform, greedy or non-greedy
