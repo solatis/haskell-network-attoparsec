@@ -59,8 +59,7 @@ spec = do
       in (pairSockets writeSocket readSocket) `shouldReturn` Right 1234
 
     it "it should leave unconsumed data in tact" $
-      let writeSocket s = do
-            NS.send s "1234ab"
+      let writeSocket s = NS.send s "1234ab"
 
           readSocket s  = runErrorT $ Atto.parseOne s (Atto.parse numberParser)
           numberParser  = decimal
@@ -68,22 +67,21 @@ spec = do
       in (pairSockets writeSocket readSocket) `shouldReturn` Left "Unconsumed data left on socket: \"ab\""
 
     it "it should throw an error when the provided data is incorrect" $
-      let writeSocket s = do
-            NS.send s "ab"
-
+      let writeSocket s = NS.send s "ab"
           readSocket s  = runErrorT $ Atto.parseOne s (Atto.parse numberParser)
           numberParser  = decimal
 
       in (pairSockets writeSocket readSocket) `shouldReturn` Left "An error occured while parsing input: \"ab\""
 
   describe "when parsing multiple matching objects" $ do
+    let numberParser = do
+          num <- decimal
+          endOfLine
+          return num
+
     it "should return error when using single object parser" $
       let writeSocket s = NS.send s "1234\n5678\n"
           readSocket s  = runErrorT $ Atto.parseOne s (Atto.parse numberParser)
-          numberParser  = do
-            num <- decimal
-            endOfLine
-            return num
 
       in (pairSockets writeSocket readSocket) `shouldReturn` Left "Unconsumed data left on socket: \"5678\\n\""
 
@@ -92,11 +90,6 @@ spec = do
           readSocket s  = runErrorT $ do
             (_, xs) <- Atto.parseMany s (Atto.parse numberParser) (Atto.parse numberParser)
             return xs
-          numberParser  = do
-            num <- decimal
-            endOfLine
-            return num
-
       in (pairSockets writeSocket readSocket) `shouldReturn` Right [1234, 5678]
 
     it "should return single object when using multi object parser and providing partial data" $
@@ -104,10 +97,6 @@ spec = do
           readSocket s  = runErrorT $ do
             (_, xs) <- Atto.parseMany s (Atto.parse numberParser) (Atto.parse numberParser)
             return xs
-          numberParser  = do
-            num <- decimal
-            endOfLine
-            return num
 
       in (pairSockets writeSocket readSocket) `shouldReturn` Right [1234]
 
@@ -120,10 +109,6 @@ spec = do
             (p, xs1) <- Atto.parseMany s (Atto.parse numberParser) (Atto.parse numberParser)
             (_, xs2) <- Atto.parseMany s (Atto.parse numberParser) p
             return (xs1 ++ xs2)
-          numberParser  = do
-            num <- decimal
-            endOfLine
-            return num
 
       in (pairSockets writeSocket readSocket) `shouldReturn` Right [1234, 5678, 9012]
 
@@ -132,10 +117,6 @@ spec = do
           readSocket s  = runErrorT $ do
             (_, xs) <- Atto.parseMany s (Atto.parse numberParser) (Atto.parse numberParser)
             return xs
-          numberParser  = do
-            num <- decimal
-            endOfLine
-            return num
 
       in (pairSockets writeSocket readSocket) `shouldReturn` Right []
 
@@ -148,9 +129,5 @@ spec = do
             (p, xs1) <- Atto.parseMany s (Atto.parse numberParser) (Atto.parse numberParser)
             (_, xs2) <- Atto.parseMany s (Atto.parse numberParser) p
             return (xs1 ++ xs2)
-          numberParser  = do
-            num <- decimal
-            endOfLine
-            return num
 
       in (pairSockets writeSocket readSocket) `shouldReturn` Right [1234]
