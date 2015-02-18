@@ -73,6 +73,16 @@ spec = do
 
       in (pairSockets writeSocket readSocket) `shouldReturn` Left "An error occured while parsing input: \"ab\""
 
+    it "it should throw an error when the socket is closed before parsing could be completed" $
+      let writeSocket s = NS.send s "12"
+          readSocket s  = runErrorT $ Atto.parseOne s (Atto.parse numberParser)
+          numberParser  = do
+            _ <- "1234"
+            _ <- endOfLine
+            return ()
+
+      in (pairSockets writeSocket readSocket) `shouldReturn` Left "An error occured while parsing input: \"12\""
+
   describe "when parsing multiple matching objects" $ do
     let numberParser = do
           num <- decimal
