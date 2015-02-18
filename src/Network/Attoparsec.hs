@@ -31,7 +31,7 @@ data ParseMode = Single | Many
 --
 --   > doParse sock = do
 --   >   (p1, xs1) <- parseMany sock (AttoParsec.parse myParser) (AttoParsec.parse myParser)
---   >   (_,  xs2) <- parseMany sock (AttoParsec.parse myPArser) p1
+--   >   (_,  xs2) <- parseMany sock (AttoParsec.parse myParser) p1
 --   >   return (xs1 ++ xs2)
 --
 --   For more usage examples, see the test directory.
