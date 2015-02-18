@@ -31,7 +31,7 @@ pairSockets writeCallback readCallback = do
 
   liftIO $ threadDelay 100000
 
-  result <- NS.connect "127.0.0.1" "1234" (\pair -> liftIO $ readCallback  (fst pair))
+  result <- NS.connect "127.0.0.1" "1234" (liftIO . readCallback . fst)
 
   liftIO $ killThread serverThread
 
