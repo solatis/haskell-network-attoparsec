@@ -76,8 +76,7 @@ spec = do
 
       in (pairSockets writeSocket readSocket) `shouldReturn` Left "An error occured while parsing input: \"ab\""
 
-
-  describe "when providing multiple matching objects" $ do
+  describe "when parsing multiple matching objects" $ do
     it "should return error when using single object parser" $
       let writeSocket s = NS.send s "1234\n5678\n"
           readSocket s  = runErrorT $ Atto.parseOne s (Atto.parse numberParser)
