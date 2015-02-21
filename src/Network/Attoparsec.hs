@@ -75,16 +75,12 @@ parseOne :: ( MonadIO m
          -> ParseC a  -- ^ Initial parser state
          -> m a       -- ^ Parsed value
 parseOne s p0 = do
-  liftIO $ putStrLn ("attemtpgin to read buffer in parseOne...")
   buf <- readAvailable s
-  liftIO $ putStrLn ("read buffer: " ++ show buf)
   (p1, value) <- parseBuffer p0 Single buf p0
 
   case value of
    -- We do not yet have enough data for a single item, let's request more
-   []  -> do
-     liftIO $ putStrLn "entering recursion, parsing next"
-     parseOne s p1
+   []  -> parseOne s p1
    [x] -> return x
 
    -- This is an internal error, since it means our single-object parser
@@ -103,11 +99,9 @@ parseBuffer p0 mode =
   let next bCur pCur =
         case pCur bCur of
          -- On error, throw error through MonadError
-         Atto.Fail    err _ _  -> do
-           fail ("An error occurred while parsing: " ++ show err)
-         Atto.Partial p1       -> do
-           return (p1, [])
-         Atto.Done    b1 v     -> do
+         Atto.Fail    err _ _  -> fail ("An error occurred while parsing: " ++ show err)
+         Atto.Partial p1       -> return (p1, [])
+         Atto.Done    b1 v     ->
            if BS.null b1
              -- This means a "perfect parse" occured: exactly enough data was on
              -- the socket to complete one parse round.
@@ -139,6 +133,5 @@ readAvailable s =
 
   in do
     conn <- liftIO $ NS.isConnected s
-    liftIO $ putStrLn ("now reading from socket, connected = " ++ show conn)
     res <- liftIO tryRead
     either throwM return res
