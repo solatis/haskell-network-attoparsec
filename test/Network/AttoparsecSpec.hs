@@ -3,10 +3,10 @@
 module Network.AttoparsecSpec where
 
 import           Control.Concurrent               (ThreadId, forkIO, killThread,
-                                                   threadDelay, myThreadId)
+                                                   myThreadId, threadDelay)
 
-import           Control.Monad.IO.Class
 import           Control.Monad.Catch
+import           Control.Monad.IO.Class
 
 import qualified Data.Attoparsec.ByteString       as Atto
 

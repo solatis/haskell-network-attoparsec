@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 {-|
@@ -15,15 +15,13 @@ bigger framework such as Pipes or Conduit.
 
 module Network.Attoparsec (ParseC, parseMany, parseOne) where
 
-import           Control.Monad.IO.Class
 import           Control.Monad.Catch
-import           Control.Exception.Enclosed (tryAny)
+import           Control.Monad.IO.Class
 
-import qualified Data.ByteString            as BS
-import qualified Network.Socket             as NS
-import qualified Network.Socket.ByteString  as NSB
-import qualified Network.Simple.TCP         as Network
 import qualified Data.Attoparsec.ByteString as Atto
+import qualified Data.ByteString            as BS
+import qualified Network.Simple.TCP         as Network
+import qualified Network.Socket             as NS
 
 -- | The parsing continuation form of a "Data.Attoparsec" parser. This is
 --   typically created by running the attoparsec "parse" function:
