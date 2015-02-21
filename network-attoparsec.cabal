@@ -24,6 +24,11 @@ library
   exposed-modules:     Network.Attoparsec
 
   build-depends:       base                     >= 4.3          && < 5
+                     , lifted-base
+                     , monad-control
+                     , transformers
+                     , enclosed-exceptions
+                     , exceptions
 
                      , mtl
                      , network
@@ -45,6 +50,8 @@ test-suite test-suite
                      , hspec
 
                      , exceptions
+                     , enclosed-exceptions
+                     , transformers
                      , bytestring
                      , mtl
                      , network

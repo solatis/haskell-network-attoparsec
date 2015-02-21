@@ -15,7 +15,9 @@ bigger framework such as Pipes or Conduit.
 
 module Network.Attoparsec (ParseC, parseMany, parseOne) where
 
-import           Control.Monad.Error
+import           Control.Monad.IO.Class
+import           Control.Monad.Catch
+import           Control.Exception.Enclosed (tryAny)
 
 import qualified Data.ByteString            as BS
 import qualified Network.Socket             as NS
@@ -45,13 +47,13 @@ data ParseMode = Single | Many
 --
 --   For more usage examples, see the test directory.
 parseMany :: ( MonadIO m
-             , MonadError String m)
+             , MonadMask m)
           => NS.Socket         -- ^ Socket to read data from
           -> ParseC a          -- ^ Initial parser state
           -> ParseC a          -- ^ Continuation parser state
           -> m (ParseC a, [a]) -- ^ Next parser state with parsed values
 parseMany s p0 pCur = do
-  buf <- liftIO $ NSB.recv s 4096
+  buf <- readAvailable s
   (p1, xs) <- parseBuffer p0 Many buf pCur
   return (p1, xs)
 
@@ -68,17 +70,21 @@ parseMany s p0 pCur = do
 --
 --  > doParse sock = parseOne sock (AttoParsec.parse myParser)
 parseOne :: ( MonadIO m
-            , MonadError String m)
+            , MonadMask m)
          => NS.Socket -- ^ Socket to read data from
          -> ParseC a  -- ^ Initial parser state
          -> m a       -- ^ Parsed value
 parseOne s p0 = do
-  buf <- liftIO $ NSB.recv s 4096
+  liftIO $ putStrLn ("attemtpgin to read buffer in parseOne...")
+  buf <- readAvailable s
+  liftIO $ putStrLn ("read buffer: " ++ show buf)
   (p1, value) <- parseBuffer p0 Single buf p0
 
   case value of
    -- We do not yet have enough data for a single item, let's request more
-   []  -> parseOne s p1
+   []  -> do
+     liftIO $ putStrLn "entering recursion, parsing next"
+     parseOne s p1
    [x] -> return x
 
    -- This is an internal error, since it means our single-object parser
@@ -86,7 +92,7 @@ parseOne s p0 = do
    _   -> error "More than one element parsed"
 
 parseBuffer :: ( MonadIO m
-               , MonadError String m)
+               , MonadMask m)
             => ParseC a          -- ^ Initial parser state
             -> ParseMode         -- ^ Whether to perform greedy or non-greedy parsing
             -> BS.ByteString     -- ^ Unconsumed buffer from previous run
@@ -97,9 +103,11 @@ parseBuffer p0 mode =
   let next bCur pCur =
         case pCur bCur of
          -- On error, throw error through MonadError
-         Atto.Fail    err _ _  -> throwError ("An error occured while parsing input: " ++ show err)
-         Atto.Partial p1       -> return (p1, [])
-         Atto.Done    b1 v     ->
+         Atto.Fail    err _ _  -> do
+           fail ("An error occurred while parsing: " ++ show err)
+         Atto.Partial p1       -> do
+           return (p1, [])
+         Atto.Done    b1 v     -> do
            if BS.null b1
              -- This means a "perfect parse" occured: exactly enough data was on
              -- the socket to complete one parse round.
@@ -111,7 +119,7 @@ parseBuffer p0 mode =
                    --
                    -- We throw an error, since within "single-object parsing mode"
                    -- we assume only perfect parses happen.
-                   Single -> throwError ("Unconsumed data left on socket: " ++ show b1)
+                   Single -> fail ("Unconsumed data left on socket: " ++ show b1)
 
                    -- Multi-object parsing mode, in which case we will enter
                    -- recursion.
@@ -120,3 +128,17 @@ parseBuffer p0 mode =
                      return (p1, v : xs)
 
   in next
+
+readAvailable :: ( MonadIO m
+                 , MonadMask m)
+              => NS.Socket
+              -> m BS.ByteString
+readAvailable s =
+  let doRead  = NSB.recv s 4096
+      tryRead = tryAny doRead
+
+  in do
+    conn <- liftIO $ NS.isConnected s
+    liftIO $ putStrLn ("now reading from socket, connected = " ++ show conn)
+    res <- liftIO tryRead
+    either throwM return res
