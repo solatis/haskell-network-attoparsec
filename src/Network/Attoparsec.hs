@@ -22,6 +22,7 @@ import           Control.Exception.Enclosed (tryAny)
 import qualified Data.ByteString            as BS
 import qualified Network.Socket             as NS
 import qualified Network.Socket.ByteString  as NSB
+import qualified Network.Simple.TCP         as Network
 import qualified Data.Attoparsec.ByteString as Atto
 
 -- | The parsing continuation form of a "Data.Attoparsec" parser. This is
@@ -127,11 +128,9 @@ readAvailable :: ( MonadIO m
                  , MonadMask m)
               => NS.Socket
               -> m BS.ByteString
-readAvailable s =
-  let doRead  = NSB.recv s 4096
-      tryRead = tryAny doRead
-
-  in do
-    conn <- liftIO $ NS.isConnected s
-    res <- liftIO tryRead
-    either throwM return res
+readAvailable s = do
+  buf <- liftIO $ Network.recv s 4096
+  liftIO $ putStrLn ("received buffer: " ++ show buf)
+  case buf of
+   Just d  -> return d
+   Nothing -> return BS.empty
