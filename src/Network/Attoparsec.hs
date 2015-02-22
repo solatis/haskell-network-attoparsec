@@ -17,11 +17,12 @@ module Network.Attoparsec (ParseC, parseMany, parseOne) where
 
 import           Control.Monad.Catch
 import           Control.Monad.IO.Class
+import           Control.Exception.Enclosed (tryAny)
 
 import qualified Data.Attoparsec.ByteString as Atto
 import qualified Data.ByteString            as BS
-import qualified Network.Simple.TCP         as Network
 import qualified Network.Socket             as NS
+import qualified Network.Socket.ByteString  as NSB
 
 -- | The parsing continuation form of a "Data.Attoparsec" parser. This is
 --   typically created by running the attoparsec "parse" function:
@@ -46,13 +47,15 @@ data ParseMode = Single | Many
 --
 --   For more usage examples, see the test directory.
 parseMany :: ( MonadIO m
-             , MonadMask m)
+             , MonadMask m
+             , Show a)
           => NS.Socket         -- ^ Socket to read data from
           -> ParseC a          -- ^ Initial parser state
           -> ParseC a          -- ^ Continuation parser state
           -> m (ParseC a, [a]) -- ^ Next parser state with parsed values
 parseMany s p0 pCur = do
   buf <- readAvailable s
+  liftIO $ putStrLn ("got  buf: " ++ show buf)
   (p1, xs) <- parseBuffer p0 Many buf pCur
   return (p1, xs)
 
@@ -69,12 +72,14 @@ parseMany s p0 pCur = do
 --
 --  > doParse sock = parseOne sock (AttoParsec.parse myParser)
 parseOne :: ( MonadIO m
-            , MonadMask m)
+            , MonadMask m
+            , Show a)
          => NS.Socket -- ^ Socket to read data from
          -> ParseC a  -- ^ Initial parser state
          -> m a       -- ^ Parsed value
 parseOne s p0 = do
   buf <- readAvailable s
+  liftIO $ putStrLn ("got  buf: " ++ show buf)
   (p1, value) <- parseBuffer p0 Single buf p0
 
   case value of
@@ -87,7 +92,8 @@ parseOne s p0 = do
    _   -> error "More than one element parsed"
 
 parseBuffer :: ( MonadIO m
-               , MonadMask m)
+               , MonadMask m
+               , Show a)
             => ParseC a          -- ^ Initial parser state
             -> ParseMode         -- ^ Whether to perform greedy or non-greedy parsing
             -> BS.ByteString     -- ^ Unconsumed buffer from previous run
@@ -126,9 +132,15 @@ readAvailable :: ( MonadIO m
                  , MonadMask m)
               => NS.Socket
               -> m BS.ByteString
-readAvailable s = do
-  buf <- liftIO $ Network.recv s 4096
-  liftIO $ putStrLn ("received buffer: " ++ show buf)
-  case buf of
-   Just d  -> return d
-   Nothing -> return BS.empty
+readAvailable s =
+  let  buf :: IO (Maybe BS.ByteString)
+       buf    = do
+        -- For some reason, Windows seems to be generating an exception sometimes
+        -- when the remote has closed the connection
+        result <- tryAny $ NSB.recv s 2048
+
+        case result of
+         Left _  -> return Nothing
+         Right v -> return (Just v)
+
+  in maybe (return BS.empty) return =<< liftIO buf

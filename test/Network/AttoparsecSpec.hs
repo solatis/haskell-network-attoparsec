@@ -3,7 +3,7 @@
 module Network.AttoparsecSpec where
 
 import           Control.Concurrent               (ThreadId, forkIO, killThread,
-                                                   myThreadId, threadDelay)
+                                                   threadDelay)
 
 import           Control.Monad.Catch
 import           Control.Monad.IO.Class
@@ -28,10 +28,7 @@ pairSockets writeCallback readCallback =
   let
     handleWrite :: NS.Socket -> IO ()
     handleWrite s = do
-      putStrLn "handling writing"
       _ <- writeCallback s
-      myTid <- myThreadId
-      putStrLn ("handled write, my thread id = " ++ show myTid)
       return ()
 
     handleRead s = do
@@ -44,17 +41,11 @@ pairSockets writeCallback readCallback =
                                                   NS.accept lsock (handleWrite . fst)
 
   in do
-    liftIO $ putStrLn "starting server"
     serverThread <- liftIO $ handleServer
-
-    liftIO $ putStrLn ("started server, thread id = " ++ show serverThread)
     liftIO $ threadDelay 100000
-
     result <- NS.connect "127.0.0.1" "1234" (handleRead . fst)
 
-    liftIO $ putStrLn "killing server"
     liftIO $ killThread serverThread
-    liftIO $ putStrLn "killed server"
 
     return result
 
@@ -144,7 +135,7 @@ spec = do
 
       in (pairSockets writeSocket readSocket) `shouldReturn` [1234, 5678, 9012]
 
-    it "should return nothing objects when using multi object parser and providing not enough data" $
+    it "should return nothing when using multi object parser and providing not enough data" $
       let writeSocket s = NS.send s "12"
           readSocket s  = do
             (_, xs) <- Atto.parseMany s (Atto.parse numberParser) (Atto.parse numberParser)

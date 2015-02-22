@@ -27,12 +27,11 @@ library
                      , lifted-base
                      , monad-control
                      , transformers
-                     , enclosed-exceptions
                      , exceptions
+                     , enclosed-exceptions
 
                      , mtl
                      , network
-                     , network-simple
                      , attoparsec
                      , bytestring
 
@@ -51,7 +50,6 @@ test-suite test-suite
                      , hspec
 
                      , exceptions
-                     , enclosed-exceptions
                      , transformers
                      , bytestring
                      , mtl
