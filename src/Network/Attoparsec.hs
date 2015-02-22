@@ -78,7 +78,6 @@ parseOne :: ( MonadIO m
          -> m a       -- ^ Parsed value
 parseOne s p0 = do
   buf <- readAvailable s
-  liftIO $ putStrLn ("got  buf: " ++ show buf)
   (p1, value) <- parseBuffer p0 Single buf p0
 
   case value of
