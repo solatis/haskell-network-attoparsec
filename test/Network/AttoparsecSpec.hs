@@ -7,6 +7,7 @@ import           Control.Concurrent               (ThreadId, forkIO, killThread,
 
 import           Control.Monad.Catch
 import           Control.Monad.IO.Class
+import           System.IO.Error                  (isUserError)
 
 import qualified Data.Attoparsec.ByteString       as Atto
 
@@ -76,14 +77,14 @@ spec = do
           readSocket s  = Atto.parseOne s (Atto.parse numberParser)
           numberParser  = decimal
 
-      in (pairSockets writeSocket readSocket) `shouldThrow` anyIOException
+      in (pairSockets writeSocket readSocket) `shouldThrow` isUserError
 
     it "it should throw an error when the provided data is incorrect" $
       let writeSocket s = NS.send s "ab"
           readSocket s  = Atto.parseOne s (Atto.parse numberParser)
           numberParser  = decimal
 
-      in (pairSockets writeSocket readSocket) `shouldThrow` anyIOException
+      in (pairSockets writeSocket readSocket) `shouldThrow` isUserError
 
     it "it should throw an error when the socket is closed before parsing could be completed" $
       let writeSocket s = NS.send s "12"
@@ -93,7 +94,7 @@ spec = do
             _ <- endOfLine
             return ()
 
-      in (pairSockets writeSocket readSocket) `shouldThrow` anyIOException
+      in (pairSockets writeSocket readSocket) `shouldThrow` isUserError
 
   describe "when parsing multiple matching objects" $ do
     let numberParser :: Atto.Parser Integer
@@ -106,7 +107,7 @@ spec = do
       let writeSocket s = NS.send s "1234\n5678\n"
           readSocket s  = Atto.parseOne s (Atto.parse numberParser)
 
-      in (pairSockets writeSocket readSocket) `shouldThrow` anyIOException
+      in (pairSockets writeSocket readSocket) `shouldThrow` isUserError
 
     it "should return multiple objects when using multi object parser" $
       let writeSocket s = NS.send s "1234\n5678\n"
