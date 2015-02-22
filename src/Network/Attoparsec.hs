@@ -55,7 +55,6 @@ parseMany :: ( MonadIO m
           -> m (ParseC a, [a]) -- ^ Next parser state with parsed values
 parseMany s p0 pCur = do
   buf <- readAvailable s
-  liftIO $ putStrLn ("got  buf: " ++ show buf)
   (p1, xs) <- parseBuffer p0 Many buf pCur
   return (p1, xs)
 
