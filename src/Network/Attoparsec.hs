@@ -54,7 +54,7 @@ parseMany :: ( MonadIO m
           -> ParseC a          -- ^ Continuation parser state
           -> m (ParseC a, [a]) -- ^ Next parser state with parsed values
 parseMany s p0 pCur = do
-  buf <- readAvailable s
+  buf <- readAvailable s Nothing
   (p1, xs) <- parseBuffer p0 Many buf pCur
   return (p1, xs)
 
@@ -62,10 +62,11 @@ parseMany s p0 pCur = do
 --   single succesful parse on the socket, and guarantees that exactly one item
 --   will be parsed.
 --
---   __Warning:__ this function will /not/ work correctly when input data is
---   pipelined. The parser might consume more data than required from the socket,
---   or a partial second object is parsed, and the parser state and buffer will
---   be discarded.
+--   __Warning:__ In order to make this function work stable with pipelined data,
+--                we read in data one byte at a time, which causes many context
+--                switches and kernel syscalls, and furthermore causes a lot of
+--                separate calls to attoparsec. So only use if performance is not
+--                a consideration.
 --
 --  The is typically used as follows:
 --
@@ -77,7 +78,7 @@ parseOne :: ( MonadIO m
          -> ParseC a  -- ^ Initial parser state
          -> m a       -- ^ Parsed value
 parseOne s p0 = do
-  buf <- readAvailable s
+  buf <- readAvailable s (Just 1)
   (p1, value) <- parseBuffer p0 Single buf p0
 
   case value of
@@ -98,6 +99,7 @@ parseBuffer :: ( MonadIO m
             -> ParseC a          -- ^ Current parser state
             -> m (ParseC a, [a]) -- ^ Next parser state with parsed values
 parseBuffer p0 mode =
+
 
   let next bCur pCur =
         case pCur bCur of
@@ -129,13 +131,15 @@ parseBuffer p0 mode =
 readAvailable :: ( MonadIO m
                  , MonadMask m)
               => NS.Socket
+              -> Maybe Int
               -> m BS.ByteString
-readAvailable s =
+readAvailable s Nothing = readAvailable s (Just 2048)
+readAvailable s (Just bytes) =
   let  buf :: IO (Maybe BS.ByteString)
        buf    = do
         -- For some reason, Windows seems to be generating an exception sometimes
         -- when the remote has closed the connection
-        result <- tryAny $ NSB.recv s 2048
+        result <- tryAny $ NSB.recv s bytes
 
         case result of
          Left _  -> return Nothing
