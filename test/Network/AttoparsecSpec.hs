@@ -103,11 +103,11 @@ spec = do
           endOfLine
           return num
 
-    it "should return error when using single object parser" $
+    it "should return not error when using single object parser" $
       let writeSocket s = NS.send s "1234\n5678\n"
           readSocket s  = Atto.parseOne s (Atto.parse numberParser)
 
-      in (pairSockets writeSocket readSocket) `shouldThrow` isUserError
+      in (pairSockets writeSocket readSocket) `shouldReturn` 1234
 
     it "should return multiple objects when using multi object parser" $
       let writeSocket s = NS.send s "1234\n5678\n"
