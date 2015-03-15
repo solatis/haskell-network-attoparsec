@@ -11,6 +11,13 @@ Stability   : experimental
 
 Utility functions for running a parser against a socket, without the need of a
 bigger framework such as Pipes or Conduit.
+
+__WARNING__: In certain situations while using the attoparsec string parser, it
+             is possible that a network parser ends in a forever-blocking state,
+             expecting more input. This is a side effect of the way attoparsec
+             is written. I have written a thorough explanation on this issue, and
+             <http://www.leonmergen.com/haskell/attoparsec/2015/03/15/on-writing-non-blocking-parsers-for-attoparsec.html how to avoid attoparsec returning a partial result> when a different branch should be evaluated.
+
 -}
 
 module Network.Attoparsec (ParseC, parseMany, parseOne) where
