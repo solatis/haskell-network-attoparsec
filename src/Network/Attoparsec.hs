@@ -53,7 +53,8 @@ data ParseMode = Single | Many
 --   >   return (xs1 ++ xs2)
 --
 --   For more usage examples, see the test directory.
-parseMany :: ( MonadIO m
+parseMany :: ( MonadFail m
+             , MonadIO m
              , MonadMask m
              , Show a)
           => NS.Socket         -- ^ Socket to read data from
@@ -78,7 +79,8 @@ parseMany s p0 pCur = do
 --  The is typically used as follows:
 --
 --  > doParse sock = parseOne sock (AttoParsec.parse myParser)
-parseOne :: ( MonadIO m
+parseOne :: ( MonadFail m
+            , MonadIO m
             , MonadMask m
             , Show a)
          => NS.Socket -- ^ Socket to read data from
@@ -97,7 +99,8 @@ parseOne s p0 = do
    -- returned multiple objects.
    _   -> error "More than one element parsed"
 
-parseBuffer :: ( MonadIO m
+parseBuffer :: ( MonadFail m
+               , MonadIO m
                , MonadMask m
                , Show a)
             => ParseC a          -- ^ Initial parser state
